@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Familie Frokostplanlægger</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .theme-jul {
+      --bg-gradient: linear-gradient(135deg, #1e3a29 0%, #064e3b 100%);
+      --accent-color: #991b1b;
+      --accent-hover: #7f1d1d;
+      --badge-bg: #fef2f2;
+      --badge-text: #991b1b;
+      --card-border: #bbf7d0;
+    }
+    .theme-paaske {
+      --bg-gradient: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+      --accent-color: #d97706;
+      --accent-hover: #b45309;
+      --badge-bg: #fffbeb;
+      --badge-text: #b45309;
+      --card-border: #fef08a;
+    }
+    .custom-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+
+  <!-- Header Section -->
+  <header class="bg-gradient-to-r from-emerald-800 via-teal-800 to-amber-700 text-white shadow-lg mb-8">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md text-xs font-semibold rounded-full mb-2 uppercase tracking-wider">
+            <i class="fa-solid font-bold fa-heart text-red-300 mr-1"></i> Familiehygge
+          </span>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Frokostplanlæggeren</h1>
+          <p class="text-emerald-100 text-sm mt-1">Planlæg vores hyggelige jule- og påskefrokoster sammen</p>
+          <p id="lastSavedText" class="text-xs text-emerald-200/90 mt-2 flex items-center gap-1.5 font-medium">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Forbinder til skyen...
+          </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-3">
+          <button onclick="deleteCurrentEvent()" class="bg-red-700/60 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-bold border border-red-500/50 shadow-md transition duration-200 flex items-center gap-2 text-sm" title="Slet det valgte arrangement">
+            <i class="fa-solid fa-trash-can"></i> Slet Arrangement
+          </button>
+          <button onclick="openNewEventModal()" class="bg-white text-emerald-900 hover:bg-emerald-50 px-5 py-2.5 rounded-xl font-bold shadow-md transition duration-200 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-emerald-600"></i> Nyt Arrangement
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-5xl mx-auto px-4">
+    
+    <!-- Event Selector Tabs & Active Info -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <!-- Tabs for events -->
+      <div id="eventTabs" class="flex flex-wrap gap-2">
+        <!-- Event tabs generated via JS -->
+      </div>
+    </div>
+
+    <!-- Active Event Card Container -->
+    <div id="eventContainer">
+      <!-- Content populated dynamically via JavaScript -->
+    </div>
+
+  </main>
+
+  <!-- Modal for Creating New Event -->
+  <div id="newEventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative transform transition-all">
+      <button onclick="closeNewEventModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <h3 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <i class="fa-regular fa-calendar-plus text-emerald-600"></i> Opret nyt arrangement
+      </h3>
+
+      <form id="createEventForm" onsubmit="handleCreateEvent(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Type af arrangement</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="border-2 border-slate-200 p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:border-red-500 transition has-[:checked]:border-red-600 has-[:checked]:bg-red-50">
+              <input type="radio" name="eventType" value="jul" checked onchange="updateEventDefaults()" class="text-red-600 focus:ring-red-500">
+              <span class="font-bold text-slate-800"><i class="fa-solid fa-tree text-red-600 mr-1"></i> Julefrokost</span>
+            </label>
+            <label class="border-2 border-slate-200 p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:border-amber-500 transition has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50">
+              <input type="radio" name="eventType" value="paaske" onchange="updateEventDefaults()" class="text-amber-600 focus:ring-amber-500">
+              <span class="font-bold text-slate-800"><i class="fa-solid fa-egg text-amber-500 mr-1"></i> Påskefrokost</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="eventYear">Årstal</label>
+            <select id="eventYear" onchange="updateEventDefaults()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white font-semibold">
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+              <option value="2029">2029</option>
+              <option value="2030">2030</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="eventTime">Tidspunkt</label>
+            <input type="text" id="eventTime" required value="kl. 13:00" placeholder="f.eks. kl. 13:00" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1" for="eventTitle">Titel</label>
+          <input type="text" id="eventTitle" required placeholder="f.eks. Familiens Julefrokost 2026" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1" for="eventDateDisplay">Beregnet Dato</label>
+          <input type="text" id="eventDateDisplay" readonly class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-medium outline-none cursor-not-allowed">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1" for="eventDescription">Beskrivelse / Besked øverst</label>
+          <textarea id="eventDescription" rows="4" placeholder="Skriv praktisk info..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" onclick="closeNewEventModal()" class="px-5 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Annuller</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">Opret Arrangement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Registration / Editing -->
+  <div id="registrationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative transform transition-all">
+      <button onclick="closeRegistrationModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <h3 id="modalTitle" class="text-2xl font-bold text-slate-900 mb-4">Meld dig til</h3>
+
+      <form id="registrationForm" onsubmit="handleSaveRegistration(event)" class="space-y-4">
+        <input type="hidden" id="regId">
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1" for="regName">Dit / Jeres navn(e)</label>
+          <input type="text" id="regName" required placeholder="f.eks. Mette & Claus" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1" for="regCount">Hvor mange kommer I i alt?</label>
+          <input type="number" id="regCount" min="1" max="30" value="1" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1" for="regDish">
+            Hvilken ret tager I med til frokostbordet? <span class="text-xs text-slate-500 font-normal">(Valgfri - kan tilføjes senere)</span>
+          </label>
+          <input type="text" id="regDish" placeholder="f.eks. Hjemmelavet sild & æg, Risalamande, osv." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+        </div>
+
+        <!-- Easter specific option -->
+        <div id="eggRollingOption" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="regEggRolling" class="w-5 h-5 text-amber-600 rounded border-amber-300 focus:ring-amber-500">
+            <div>
+              <span class="font-bold text-amber-900 flex items-center gap-1">
+                <i class="fa-solid fa-egg text-amber-500"></i> Deltager i "Æggetrilning på Åsen"
+              </span>
+              <p class="text-xs text-amber-700 mt-0.5">Sæt kryds hvis I er klar til den traditionelle æggetrilning!</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" onclick="closeRegistrationModal()" class="px-5 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Annuller</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">Gem Tilmelding</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Confirmation Password Delete -->
+  <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative transform transition-all">
+      <button onclick="closeDeleteModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="text-center mb-4">
+        <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900">Bekræft sletning</h3>
+        <p class="text-xs text-slate-500 mt-1">Sletning af dette arrangement kan ikke fortrydes. Indtast koden for at fortsætte.</p>
+      </div>
+
+      <form id="deleteForm" onsubmit="confirmDeleteEvent(event)" class="space-y-4">
+        <div>
+          <input type="password" id="deleteCodeInput" placeholder="Indtast kode..." required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none text-center font-bold">
+          <p id="deleteErrorMsg" class="text-xs text-red-600 font-semibold mt-1 hidden text-center">Forkert kode!</p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeDeleteModal()" class="w-1/2 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Annuller</button>
+          <button type="submit" class="w-1/2 py-2.5 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white shadow-md">Slet arrangement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Editing Event Details (Password Protected) -->
+  <div id="editEventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative transform transition-all">
+      <button onclick="closeEditEventModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Step 1: Password Verification -->
+      <div id="editAuthStep">
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fa-solid fa-lock text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900">Arrangør-adgang</h3>
+          <p class="text-xs text-slate-500 mt-1">Indtast adgangskoden for at redigere dato og beskrivelse.</p>
+        </div>
+
+        <form onsubmit="verifyEditPassword(event)" class="space-y-4">
+          <div>
+            <input type="password" id="editCodeInput" placeholder="Indtast kode..." required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-center font-bold">
+            <p id="editErrorMsg" class="text-xs text-red-600 font-semibold mt-1 hidden text-center">Forkert kode!</p>
+          </div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" onclick="closeEditEventModal()" class="w-1/2 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Annuller</button>
+            <button type="submit" class="w-1/2 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">Lås op</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2: Edit Form -->
+      <div id="editFormStep" class="hidden">
+        <h3 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-emerald-600"></i> Rediger arrangement
+        </h3>
+
+        <form onsubmit="handleSaveEventEdit(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="editEventDate">Dato & Tidspunkt</label>
+            <input type="text" id="editEventDate" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-medium">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="editEventDescription">Beskrivelse / Besked øverst</label>
+            <textarea id="editEventDescription" rows="5" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" onclick="closeEditEventModal()" class="px-5 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100">Annuller</button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">Gem ændringer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- App State & Script Logic -->
+  <script>
+    // Lokale arrangementer og data
+    let events = [];
+    let activeEventId = null;
+    let syncInterval = null;
+
+    // Unikt ID for dette frokostprojekt så det synkroniserer på tværs
+    const SYNC_KEY = "familie_frokostplanlaegger_shared_data_v4";
+    const API_BIN_URL = "https://jsonblob.com/api/jsonBlob";
+    let storedBlobId = localStorage.getItem('familie_frokost_blob_id') || "";
+
+    // Standard data hvis der ikke er gemt noget i forvejen
+    const defaultEvents = [
+      {
+        id: "jul-2026",
+        type: "jul",
+        title: "Familiens Julefrokost 2026",
+        date: "2. juledag (26. december 2026) kl. 13:00",
+        description: "Velkommen til årets julefrokost. Vi sørger for brød, smør og drikkevarer. Når I tilmelder jeres familie, så husk at registrere, hvor mange I kommer. I kan tilføje den ret, som I har lyst til at tage med, med det samme eller tilføje den senere.\nVi glæder os til en hyggelig dag sammen med jer",
+        registrations: []
+      },
+      {
+        id: "paaske-2026",
+        type: "paaske",
+        title: "Familiens Påskefrokost 2026",
+        date: "Påskedag (5. april 2026) kl. 12:00",
+        description: "Velkommen til årets påskefrokost. Vi sørger for brød, smør og drikkevarer. Når I tilmelder jeres familie, så husk at registrere, hvor mange I kommer. I kan tilføje den ret, som I har lyst til at tage med, med det samme eller tilføje den senere.\nVi glæder os til en hyggelig dag sammen med jer. Hvis I vil med til æggetrilning på Åsen, så noter også det",
+        registrations: []
+      }
+    ];
+
+    function updateLastSavedIndicator(statusText = "Gemt i skyen & synkroniseret", isOnline = true) {
+      const el = document.getElementById('lastSavedText');
+      if (!el) return;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const colorClass = isOnline ? "text-emerald-300" : "text-amber-300";
+      el.innerHTML = `<i class="fa-solid fa-cloud-arrow-up ${colorClass}"></i> ${statusText} (kl. ${timeStr})`;
+    }
+
+    // Synkroniser med fælles online lager
+    async function fetchCloudData(isBackground = false) {
+      try {
+        // Tjek først om der er gemt en blob ID i localStorage eller hent standard
+        if (!storedBlobId) {
+          const localData = localStorage.getItem(SYNC_KEY);
+          if (localData) {
+            events = JSON.parse(localData);
+          } else {
+            events = defaultEvents;
+            await saveToCloud(events);
+          }
+        } else {
+          const response = await fetch(`${API_BIN_URL}/${storedBlobId}`);
+          if (response.ok) {
+            const cloudEvents = await response.json();
+            if (Array.isArray(cloudEvents) && cloudEvents.length > 0) {
+              events = cloudEvents;
+            }
+          }
+        }
+        if (!isBackground) {
+          if (events.length > 0 && (!activeEventId || !events.some(e => e.id === activeEventId))) {
+            activeEventId = events[0].id;
+          }
+          renderTabs();
+          renderActiveEvent();
+          updateLastSavedIndicator("Online og synkroniseret", true);
+        }
+      } catch (err) {
+        console.warn("Kunne ikke hente fra skyen, bruger lokal kopi:", err);
+        const localData = localStorage.getItem(SYNC_KEY);
+        if (localData) {
+          events = JSON.parse(localData);
+        } else {
+          events = defaultEvents;
+        }
+        if (!isBackground) {
+          renderTabs();
+          renderActiveEvent();
+          updateLastSavedIndicator("Kører lokalt (offline)", false);
+        }
+      }
+    }
+
+    async function saveToCloud(dataToSave) {
+      try {
+        localStorage.setItem(SYNC_KEY, JSON.stringify(dataToSave));
+        
+        if (!storedBlobId) {
+          // Opret ny online container
+          const response = await fetch(API_BIN_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(dataToSave)
+          });
+          const location = response.headers.get('Location');
+          if (location) {
+            const parts = location.split('/');
+            storedBlobId = parts[parts.length - 1];
+            localStorage.setItem('familie_frokost_blob_id', storedBlobId);
+          }
+        } else {
+          // Opdater eksisterende online container
+          await fetch(`${API_BIN_URL}/${storedBlobId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(dataToSave)
+          });
+        }
+        updateLastSavedIndicator("Ændringer gemt i skyen", true);
+      } catch (err) {
+        console.error("Fejl ved lagring til sky:", err);
+        updateLastSavedIndicator("Gemt lokalt (synkroniserer senere)", false);
+      }
+      renderTabs();
+      renderActiveEvent();
+    }
+
+    // Gem arrangementer
+    function saveEventsToStorage() {
+      saveToCloud(events);
+    }
+
+    // Initialiser appen
+    async function initApp() {
+      await fetchCloudData(false);
+
+      // Start automatisk baggrundssynkronisering hvert 5. sekund så andre enheder opdateres automatisk
+      if (syncInterval) clearInterval(syncInterval);
+      syncInterval = setInterval(() => {
+        fetchCloudData(true);
+      }, 5000);
+    }
+
+    window.setActiveEvent = function(id) {
+      activeEventId = id;
+      renderTabs();
+      renderActiveEvent();
+    };
+
+    // Render Event Selector Tabs
+    function renderTabs() {
+      const tabsContainer = document.getElementById('eventTabs');
+      if (!tabsContainer) return;
+
+      if (events.length === 0) {
+        tabsContainer.innerHTML = '<span class="text-sm text-slate-500 italic">Ingen arrangementer endnu. Opret et nyt ovenfor!</span>';
+        return;
+      }
+
+      tabsContainer.innerHTML = events.map(evt => {
+        const isActive = evt.id === activeEventId;
+        const icon = evt.type === 'jul' ? 'fa-tree text-red-500' : 'fa-egg text-amber-500';
+        const activeClass = isActive 
+          ? 'bg-slate-900 text-white shadow-md border-slate-900' 
+          : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200';
+        
+        return `
+          <button onclick="setActiveEvent('${evt.id}')" class="px-4 py-2 rounded-xl text-sm font-bold border transition duration-200 flex items-center gap-2 ${activeClass}">
+            <i class="fa-solid ${icon}"></i>
+            <span>${evt.title}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    // Render Active Event Card & Details
+    function renderActiveEvent() {
+      const container = document.getElementById('eventContainer');
+      if (!container) return;
+
+      const event = events.find(e => e.id === activeEventId);
+
+      if (!event) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl p-12 text-center border border-slate-200 custom-shadow">
+            <i class="fa-regular fa-calendar-xmark text-4xl text-slate-300 mb-3"></i>
+            <h3 class="text-xl font-bold text-slate-700">Ingen valgte arrangementer</h3>
+            <p class="text-slate-500 text-sm mt-1">Vælg et arrangement faneblad ovenfor eller opret et nyt.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const isJul = event.type === 'jul';
+      const totalParticipants = event.registrations.reduce((sum, r) => sum + (parseInt(r.count, 10) || 0), 0);
+      const eggRollersCount = isJul ? 0 : event.registrations.filter(r => r.eggRolling).reduce((sum, r) => sum + (parseInt(r.count, 10) || 0), 0);
+
+      const headerThemeClass = isJul 
+        ? 'bg-gradient-to-r from-red-800 to-emerald-900 text-white' 
+        : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900';
+
+      const iconHeader = isJul ? 'fa-tree' : 'fa-egg';
+
+      const regListHtml = event.registrations.length === 0
+        ? `<div class="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-500 text-sm">
+             Ingen tilmeldinger endnu. Vær den første til at melde dig til!
+           </div>`
+        : event.registrations.map(reg => `
+            <div class="bg-slate-50 hover:bg-slate-100/80 transition rounded-xl p-4 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-900 text-base">${reg.name}</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                    <i class="fa-solid font-bold fa-user-group text-[10px] mr-1"></i> ${reg.count} ${reg.count === 1 ? 'person' : 'personer'}
+                  </span>
+                  ${!isJul && reg.eggRolling ? `
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                      <i class="fa-solid fa-egg mr-1"></i> Æggetrilning
+                    </span>
+                  ` : ''}
+                </div>
+                <div class="text-sm mt-1 flex items-center gap-1.5 ${reg.dish ? 'text-slate-700 font-medium' : 'text-slate-400 italic'}">
+                  <i class="fa-solid fa-utensils text-xs text-slate-400"></i>
+                  <span>${reg.dish ? reg.dish : 'Har ikke tilføjet en ret endnu'}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 self-end sm:self-center">
+                <button onclick="openRegistrationModal('${reg.id}')" title="Rediger / Tilføj ret" class="px-3 py-1.5 bg-white hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 transition flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-pen text-slate-500"></i> Rediger / Ret
+                </button>
+                <button onclick="deleteRegistration('${reg.id}')" title="Slet tilmelding" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition">
+                  <i class="fa-solid fa-trash-can text-sm"></i>
+                </button>
+              </div>
+            </div>
+          `).join('');
+
+      container.innerHTML = `
+        <div class="bg-white rounded-2xl overflow-hidden custom-shadow border border-slate-200">
+          
+          <!-- Event Banner Header -->
+          <div class="${headerThemeClass} p-6 md:p-8">
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+              <div>
+                <div class="flex items-center gap-2 text-xs uppercase font-bold tracking-wider opacity-90 mb-1">
+                  <i class="fa-solid ${iconHeader}"></i> ${isJul ? 'Julefrokost' : 'Påskefrokost'}
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold">${event.title}</h2>
+                <p class="text-sm opacity-90 mt-1 flex items-center gap-2">
+                  <i class="fa-regular fa-clock"></i> ${event.date}
+                </p>
+              </div>
+
+              <!-- Big Total Counter -->
+              <div class="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl px-6 py-4 text-center shrink-0">
+                <span class="text-xs font-semibold uppercase tracking-wider block opacity-90">Tilmeldte i alt</span>
+                <span class="text-4xl font-extrabold tracking-tight">${totalParticipants}</span>
+                <span class="text-xs block font-medium opacity-90">personer</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description Section -->
+          <div class="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50">
+            <div class="flex justify-between items-center mb-2">
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Information fra arrangøren</h3>
+              <button onclick="openEditEventModal()" class="text-xs font-semibold text-slate-500 hover:text-emerald-700 bg-white hover:bg-emerald-50 border border-slate-200 px-3 py-1 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-lock text-[10px]"></i> Rediger info
+              </button>
+            </div>
+            <p class="text-slate-700 whitespace-pre-line leading-relaxed text-sm md:text-base font-normal">${event.description}</p>
+          </div>
+
+          <!-- Summary Bar & Egg Rolling Indicator (for Easter) -->
+          ${!isJul ? `
+            <div class="bg-amber-50/80 px-6 py-3 border-b border-amber-100 flex items-center justify-between gap-4 text-xs md:text-sm text-amber-900">
+              <span class="font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-egg text-amber-600 text-base"></i> "Æggetrilning på Åsen" status:
+              </span>
+              <span class="font-bold bg-amber-200/70 px-3 py-1 rounded-full text-amber-900">
+                ${eggRollersCount} familiemedlemmer har meldt sig klar!
+              </span>
+            </div>
+          ` : ''}
+
+          <!-- Registrations & Dishes Section -->
+          <div class="p-6 md:p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h3 class="text-xl font-bold text-slate-900">Tilmeldte & Frokostbordet</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Se hvem der kommer, og hvilke lækre retter der tages med</p>
+              </div>
+
+              <button onclick="openRegistrationModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition flex items-center justify-center gap-2 text-sm">
+                <i class="fa-solid fa-user-plus"></i> Meld dig / familien til
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              ${regListHtml}
+            </div>
+
+            <!-- Danger Zone / Delete Event -->
+            <div class="mt-10 pt-6 border-t border-slate-100 flex justify-end">
+              <button onclick="deleteCurrentEvent()" class="text-xs font-semibold text-red-500 hover:text-red-700 transition flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-red-50">
+                <i class="fa-solid fa-trash-can"></i> Slet dette arrangement
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      `;
+    }
+
+    function getEasterSunday(year) {
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31);
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+
+      const monthNames = ["januar", "februar", "marts", "april", "maj", "juni", "juli", "august", "september", "oktober", "november", "december"];
+      return `${day}. ${monthNames[month - 1]}`;
+    }
+
+    window.updateEventDefaults = function() {
+      const typeEl = document.querySelector('input[name="eventType"]:checked');
+      if (!typeEl) return;
+      const type = typeEl.value;
+      const year = document.getElementById('eventYear').value;
+      const titleInput = document.getElementById('eventTitle');
+      const dateDisplay = document.getElementById('eventDateDisplay');
+      const descInput = document.getElementById('eventDescription');
+
+      if (type === 'jul') {
+        titleInput.value = `Familiens Julefrokost ${year}`;
+        dateDisplay.value = `2. juledag (26. december ${year})`;
+        descInput.value = `Velkommen til årets julefrokost. Vi sørger for brød, smør og drikkevarer. Når I tilmelder jeres familie, så husk at registrere, hvor mange I kommer. I kan tilføje den ret, som I har lyst til at tage med, med det samme eller tilføje den senere.\nVi glæder os til en hyggelig dag sammen med jer`;
+      } else {
+        const easterDateStr = getEasterSunday(parseInt(year, 10));
+        titleInput.value = `Familiens Påskefrokost ${year}`;
+        dateDisplay.value = `Påskedag (${easterDateStr} ${year})`;
+        descInput.value = `Velkommen til årets påskefrokost. Vi sørger for brød, smør og drikkevarer. Når I tilmelder jeres familie, så husk at registrere, hvor mange I kommer. I kan tilføje den ret, som I har lyst til at tage med, med det samme eller tilføje den senere.\nVi glæder os til en hyggelig dag sammen med jer. Hvis I vil med til æggetrilning på Åsen, så noter også det`;
+      }
+    };
+
+    window.openNewEventModal = function() {
+      document.getElementById('newEventModal').classList.remove('hidden');
+      updateEventDefaults();
+    };
+
+    window.closeNewEventModal = function() {
+      document.getElementById('newEventModal').classList.add('hidden');
+      document.getElementById('createEventForm').reset();
+    };
+
+    window.handleCreateEvent = function(e) {
+      e.preventDefault();
+      const type = document.querySelector('input[name="eventType"]:checked').value;
+      const title = document.getElementById('eventTitle').value.trim();
+      const dateBase = document.getElementById('eventDateDisplay').value.trim();
+      const timeStr = document.getElementById('eventTime').value.trim();
+      const description = document.getElementById('eventDescription').value.trim();
+
+      const fullDate = `${dateBase} ${timeStr}`;
+
+      const newEvt = {
+        id: 'evt-' + Date.now(),
+        type,
+        title,
+        date: fullDate,
+        description,
+        registrations: []
+      };
+
+      events.push(newEvt);
+      activeEventId = newEvt.id;
+      closeNewEventModal();
+      saveEventsToStorage();
+    };
+
+    window.deleteCurrentEvent = function() {
+      if (!activeEventId) return;
+      document.getElementById('deleteCodeInput').value = '';
+      document.getElementById('deleteErrorMsg').classList.add('hidden');
+      document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    };
+
+    window.closeDeleteModal = function() {
+      document.getElementById('deleteConfirmModal').classList.add('hidden');
+    };
+
+    window.confirmDeleteEvent = function(e) {
+      e.preventDefault();
+      const code = document.getElementById('deleteCodeInput').value.trim();
+      
+      if (code !== "Malene") {
+        document.getElementById('deleteErrorMsg').classList.remove('hidden');
+        return;
+      }
+
+      events = events.filter(e => e.id !== activeEventId);
+      if (events.length > 0) activeEventId = events[0].id;
+      else activeEventId = null;
+
+      closeDeleteModal();
+      saveEventsToStorage();
+    };
+
+    window.openEditEventModal = function() {
+      const event = events.find(e => e.id === activeEventId);
+      if (!event) return;
+
+      document.getElementById('editCodeInput').value = '';
+      document.getElementById('editErrorMsg').classList.add('hidden');
+      document.getElementById('editAuthStep').classList.remove('hidden');
+      document.getElementById('editFormStep').classList.add('hidden');
+      document.getElementById('editEventModal').classList.remove('hidden');
+      
+      setTimeout(() => document.getElementById('editCodeInput').focus(), 100);
+    };
+
+    window.closeEditEventModal = function() {
+      document.getElementById('editEventModal').classList.add('hidden');
+    };
+
+    window.verifyEditPassword = function(e) {
+      e.preventDefault();
+      const code = document.getElementById('editCodeInput').value.trim();
+      
+      if (code !== "Malene") {
+        document.getElementById('editErrorMsg').classList.remove('hidden');
+        return;
+      }
+
+      const event = events.find(e => e.id === activeEventId);
+      if (!event) return;
+
+      document.getElementById('editEventDate').value = event.date;
+      document.getElementById('editEventDescription').value = event.description;
+      
+      document.getElementById('editAuthStep').classList.add('hidden');
+      document.getElementById('editFormStep').classList.remove('hidden');
+    };
+
+    window.handleSaveEventEdit = function(e) {
+      e.preventDefault();
+      const event = events.find(e => e.id === activeEventId);
+      if (!event) return;
+
+      event.date = document.getElementById('editEventDate').value.trim();
+      event.description = document.getElementById('editEventDescription').value.trim();
+
+      closeEditEventModal();
+      saveEventsToStorage();
+    };
+
+    window.openRegistrationModal = function(regId = null) {
+      const event = events.find(e => e.id === activeEventId);
+      if (!event) return;
+
+      const modal = document.getElementById('registrationModal');
+      const form = document.getElementById('registrationForm');
+      const modalTitle = document.getElementById('modalTitle');
+      const eggOption = document.getElementById('eggRollingOption');
+
+      if (event.type === 'paaske') {
+        eggOption.classList.remove('hidden');
+      } else {
+        eggOption.classList.add('hidden');
+      }
+
+      if (regId) {
+        modalTitle.textContent = "Opdater din tilmelding & ret";
+        const reg = event.registrations.find(r => r.id === regId);
+        if (reg) {
+          document.getElementById('regId').value = reg.id;
+          document.getElementById('regName').value = reg.name;
+          document.getElementById('regCount').value = reg.count;
+          document.getElementById('regDish').value = reg.dish || '';
+          document.getElementById('regEggRolling').checked = !!reg.eggRolling;
+        }
+      } else {
+        modalTitle.textContent = "Meld dig til";
+        form.reset();
+        document.getElementById('regId').value = '';
+      }
+
+      modal.classList.remove('hidden');
+    };
+
+    window.closeRegistrationModal = function() {
+      document.getElementById('registrationModal').classList.add('hidden');
+      document.getElementById('registrationForm').reset();
+    };
+
+    window.handleSaveRegistration = function(e) {
+      e.preventDefault();
+      const event = events.find(e => e.id === activeEventId);
+      if (!event) return;
+
+      const regId = document.getElementById('regId').value;
+      const name = document.getElementById('regName').value.trim();
+      const count = parseInt(document.getElementById('regCount').value, 10) || 1;
+      const dish = document.getElementById('regDish').value.trim();
+      const eggRolling = document.getElementById('regEggRolling').checked;
+
+      if (regId) {
+        const regIndex = event.registrations.findIndex(r => r.id === regId);
+        if (regIndex !== -1) {
+          event.registrations[regIndex] = {
+            id: regId,
+            name,
+            count,
+            dish,
+            eggRolling: event.type === 'paaske' ? eggRolling : false
+          };
+        }
+      } else {
+        event.registrations.push({
+          id: 'reg-' + Date.now(),
+          name,
+          count,
+          dish,
+          eggRolling: event.type === 'paaske' ? eggRolling : false
+        });
+      }
+
+      closeRegistrationModal();
+      saveEventsToStorage();
+    };
+
+    window.deleteRegistration = function(regId) {
+      const event = events.find(e => e.id === activeEventId);
+      if (!event) return;
+
+      event.registrations = event.registrations.filter(r => r.id !== regId);
+      saveEventsToStorage();
+    };
+
+    window.onload = function() {
+      initApp();
+    };
+  </script>
+</body>
+</html>
